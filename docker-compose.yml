@@ -1,0 +1,26 @@
+version: '3.4'
+
+services:
+  authservice:
+    image: authservice
+    build:
+      context: .
+      dockerfile: AuthService/Dockerfile
+    ports:
+      - "5001:80"
+  
+  userservice:
+    image: userservice
+    build:
+      context: .
+      dockerfile: UserService/Dockerfile
+    ports:
+      - "5002:80"
+
+  chatservice:
+    image: chatservice
+    build:
+      context: .
+      dockerfile: ChatService/Dockerfile
+    ports:
+      - "5003:80"
