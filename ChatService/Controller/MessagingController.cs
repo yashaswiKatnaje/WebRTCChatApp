@@ -5,14 +5,16 @@ using Microsoft.EntityFrameworkCore;
 [Route("api/[controller]")]
 public class MessagingController : ControllerBase
 {
-    private readonly ApplicationDbContext _context;
+    private readonly ChatDbContext _context;
+    private readonly IConfiguration _configuration;
 
-    public MessagingController(ApplicationDbContext context)
+    public MessagingController( ChatDbContext context, IConfiguration configuration)
     {
         _context = context;
+        _configuration = configuration;
     }
 
-    [HttpPost("send")]
+    [HttpPost("SendMessage")]
     public async Task<IActionResult> SendMessage(Message message)
     {
         _context.Messages.Add(message);

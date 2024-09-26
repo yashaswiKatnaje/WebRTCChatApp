@@ -1,49 +1,65 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Text;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AuthenticationController : ControllerBase
+public class AuthController : ControllerBase
 {
-    private readonly ApplicationDbContext _context;
+    private readonly AuthDbContext _context;
+    private readonly IConfiguration _configuration;
 
-    public AuthenticationController(ApplicationDbContext context)
+    public AuthController(AuthDbContext context, IConfiguration configuration)
     {
         _context = context;
+        _configuration = configuration;
     }
 
     [HttpPost("register")]
-    public async Task<IActionResult> Register(User user)
+    public async Task<IActionResult> Register([FromBody] RegisterModel dto)
     {
-        user.Password =user.Password;
+        var user = new User
+        {
+            Username = dto.Username,
+            Email = dto.Email,
+            Password =dto.Password
+        };
+
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
         return Ok();
     }
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login(User user)
+    public async Task<IActionResult> Login([FromBody] LoginModel dto)
     {
-        var dbUser = await _context.Users.FirstOrDefaultAsync(t => t.Username == user.Username);//FindAsync(user.Username);
-        if (dbUser == null )
-        {
+        var user = _context.Users.SingleOrDefault(u => u.Username == dto.Username && u.Password == dto.Password);
+        if (user == null )
             return Unauthorized();
-        }
 
+        var token = GenerateJwtToken(user);
+        var Id = user.Id;
+        return Ok(user);
+    }
+
+    private string GenerateJwtToken(User user)
+    {
         var tokenHandler = new JwtSecurityTokenHandler();
+        var key = Encoding.ASCII.GetBytes(_configuration["JwtSettings:Secret"]);
         var tokenDescriptor = new SecurityTokenDescriptor
         {
-            Subject = new ClaimsIdentity(new[] { new Claim("id", dbUser.Id.ToString()) }),
-            Expires = DateTime.UtcNow.AddHours(1),
-            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes("ThisIsASecureKey123ThisIsASecureKey123!")), SecurityAlgorithms.HmacSha256Signature)
+            Subject = new ClaimsIdentity(new[]
+            {
+                new Claim(ClaimTypes.Name, user.Email),
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
+            }),
+            Expires = DateTime.UtcNow.AddDays(7),
+            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
         };
+
         var token = tokenHandler.CreateToken(tokenDescriptor);
-        return Ok(new { Token = tokenHandler.WriteToken(token) });
+        return tokenHandler.WriteToken(token);
     }
 }

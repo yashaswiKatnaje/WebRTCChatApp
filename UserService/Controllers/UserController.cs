@@ -1,35 +1,36 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
 [Route("api/[controller]")]
 public class UserController : ControllerBase
 {
-    private readonly ApplicationDbContext _context;
+    private readonly UserDbContext _context;
 
-    public UserController(ApplicationDbContext context)
+    public UserController(UserDbContext context)
     {
         _context = context;
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("GetUser/{id}")]
     public async Task<IActionResult> GetUser(long id)
     {
         var user = await _context.Users.FindAsync(id);
-        if (user == null)
-            return NotFound();
+        if (user == null) return NotFound();
+
         return Ok(user);
     }
 
-    [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateUser(int id, User user)
+    [HttpPut("UpdateUser/{id}")]
+    public async Task<IActionResult> UpdateUser(long id, [FromBody] User dto)
     {
-        if (id != user.Id)
-            return BadRequest();
+        var user = await _context.Users.FindAsync(id);
+        if (user == null) return NotFound();
 
-        _context.Entry(user).State = EntityState.Modified;
+        user.Username = dto.Username ?? user.Username;
+        user.Email = dto.Email ?? user.Email;
+        user.Password = dto.Password ?? user.Password;
+
         await _context.SaveChangesAsync();
-        return NoContent();
+        return Ok();
     }
 }

@@ -1,0 +1,129 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <style>
+                body {
+    background-image: url('images/background1.jpg'); 
+    background-size: cover; 
+    background-position: center; 
+    height: 100vh; 
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: black; 
+}
+        .profile-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+        .profile-container h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .profile-container label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .profile-container input {
+            width: 80%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .profile-container button {
+            width: 80%;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .profile-container button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="profile-container">
+        <h2>User Profile</h2>
+        <form id="profileForm">
+            <label for="userName">Name</label>
+            <input type="text" id="userName" name="userName" required>
+
+            <label for="userEmail">Email</label>
+            <input type="email" id="userEmail" name="userEmail" required>
+
+            <label for="userPassword">Password</label>
+            <input type="password" id="userPassword" name="userPassword" required>
+
+            <button type="submit">Update Profile</button>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const userId = localStorage.getItem('userId'); 
+            const getUserApiUrl = `https://localhost:44329/api/User/GetUser/${userId}`;
+            const updateUserApiUrl = `https://localhost:44329/api/User/updateuser/${userId}`;
+            debugger;
+            // Fetch user data
+            fetch(getUserApiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('userName').value = data.username;
+                    document.getElementById('userEmail').value = data.email;
+                    document.getElementById('userPassword').value = data.password;
+                })
+                .catch(error => {
+                    console.error('Error fetching user data:', error);
+                });
+
+            // Update user data
+            document.getElementById('profileForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                debugger;
+                const updatedUser = {
+                    userName: document.getElementById('userName').value,
+                    email: document.getElementById('userEmail').value,
+                    password: document.getElementById('userPassword').value
+                };
+
+                fetch(updateUserApiUrl, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updatedUser)
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Failed to update user data.'); // If response is not OK, throw an error.
+                        }
+                        // Try to parse JSON only if the response body exists.
+                        return response.text().then(text => text ? JSON.parse(text) : {});
+                    })
+                    .then(data => {
+                        alert('Profile updated successfully!'); // Display success message.
+                    })
+                    .catch(error => {
+                        console.error('Error updating user data:', error);
+                        alert('Error updating user data: ' + error.message); // Display error message.
+                    });
+            });
+
+        });
+    </script>
+
+</body>
+</html>
