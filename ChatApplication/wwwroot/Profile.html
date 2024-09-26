@@ -108,17 +108,17 @@
                 })
                     .then(response => {
                         if (!response.ok) {
-                            throw new Error('Failed to update user data.'); // If response is not OK, throw an error.
+                            throw new Error('Failed to update user data.'); 
                         }
-                        // Try to parse JSON only if the response body exists.
+                     
                         return response.text().then(text => text ? JSON.parse(text) : {});
                     })
                     .then(data => {
-                        alert('Profile updated successfully!'); // Display success message.
+                        alert('Profile updated successfully!'); 
                     })
                     .catch(error => {
                         console.error('Error updating user data:', error);
-                        alert('Error updating user data: ' + error.message); // Display error message.
+                        alert('Error updating user data: ' + error.message); 
                     });
             });
 
